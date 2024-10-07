@@ -1,5 +1,5 @@
 import {Component, EventEmitter, inject, Input, Output} from '@angular/core';
-import {User} from "../users-list/user.model";
+import {UserInterface} from "../types/user.interface";
 import {MatButtonModule} from "@angular/material/button";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatIconModule} from "@angular/material/icon";
@@ -8,7 +8,6 @@ import {CreateEditUser} from "../create-edit-user/create-edit-user";
 import {
   MatDialog,
 } from '@angular/material/dialog';
-import {UsersService} from "../users-list/users.service";
 
 @Component({
   selector: 'app-user-card',
@@ -18,14 +17,12 @@ import {UsersService} from "../users-list/users.service";
   styleUrl: './user-card.component.scss'
 })
 export class UserCardComponent {
-  @Input() user!: User;
+  @Input() user!: UserInterface;
   @Output() onDeleteUser = new EventEmitter<number>();
 
-  constructor() {
-  }
+  constructor() {}
 
   readonly dialog = inject(MatDialog);
-  readonly userService = inject(UsersService);
 
   openDialog() {
     this.dialog.open(CreateEditUser, {
@@ -37,7 +34,6 @@ export class UserCardComponent {
         phone: this.user.phone,
       },
     });
-    console.log('this.user.id ' + this.user.id)
   }
 
   deleteUser() {

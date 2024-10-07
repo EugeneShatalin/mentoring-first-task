@@ -1,20 +1,19 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {AsyncPipe} from "@angular/common";
-import {MatButtonModule} from "@angular/material/button";
+import {Observable} from "rxjs";
 
-import {UsersApiService} from "./users-api.service";
-import {UsersService} from "./users.service";
-import {User} from "./user.model";
+import {UserInterface} from "../types/user.interface";
+import {AppState} from "../types/app-state.interface";
 import {UserCardComponent} from "../user-card/user-card.component";
+import {CreateEditUser} from "../create-edit-user/create-edit-user";
+
+import {Store} from "@ngrx/store";
+import {getUsersSelector} from "../store/users.selector";
+import {deleteUser, loadUsers} from "../store/users.actions";
+
 import {MatDividerModule} from "@angular/material/divider";
-
-import {
-  MatDialog
-} from '@angular/material/dialog';
-import {
-  CreateEditUser
-} from "../create-edit-user/create-edit-user";
-
+import {MatButtonModule} from "@angular/material/button";
+import {MatDialog} from '@angular/material/dialog';
 
 @Component({
   selector: 'app-users-list',
@@ -30,38 +29,22 @@ import {
   styleUrl: './users-list.component.scss'
 })
 export class UsersListComponent implements OnInit {
-  users$: User[] = [];
+
+  users$: Observable<UserInterface[]>;
+
+  store: Store<AppState> = inject(Store);
 
   constructor() {
+    this.users$ = this.store.select(getUsersSelector)
   }
 
-  userApi: UsersApiService = inject(UsersApiService)
-  usersService: UsersService = inject(UsersService)
 
   ngOnInit() {
-    // @ts-ignore
-    let localStorageUsers = JSON.parse(localStorage.getItem('storedUsers'));
-
-    if (localStorageUsers) {
-      this.usersService.getUsers(localStorageUsers);
-    } else {
-      this.userApi.loadUsers()
-        .subscribe(
-          (users) => {
-            this.usersService.getUsers(users);
-          }
-        )
-    }
-
-    this.usersService.users$.subscribe(
-      (users) => {
-        this.users$ = users;
-      }
-    )
+    this.store.dispatch(loadUsers())
   }
 
   deleteUser(id: number) {
-    this.usersService.deleteUser(id);
+    this.store.dispatch(deleteUser({id: id}))
   }
 
   readonly dialog = inject(MatDialog);
@@ -75,15 +58,5 @@ export class UsersListComponent implements OnInit {
         phone: null,
       },
     });
-  }
-
-  removeLocalStorage() {
-    localStorage.removeItem('storedUsers');
-    this.userApi.loadUsers()
-      .subscribe(
-        (users) => {
-          this.usersService.getUsers(users);
-        }
-      )
   }
 }
